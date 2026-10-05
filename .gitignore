@@ -1,0 +1,38 @@
+# Keep VM storage and installers out of source control.
+*.iso
+*.qcow2
+*.qcow
+*.img
+*.vdi
+*.vmdk
+*.vhd
+*.vhdx
+*.ova
+*.ovf
+ISO/
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Installation secrets, keys, local configuration, and raw logs.
+wazuh-install-files*
+*passwords*
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.env
+.env.*
+secrets/
+private/
+*.log
+wazuh-install.sh
+
+# Editor and desktop files.
+*~
+*.swp
+.DS_Store
+Thumbs.db
