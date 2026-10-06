@@ -39,3 +39,13 @@ Evidence: [first dashboard login](../screenshots/10-wazuh-dashboard-first-login.
 For this short session, I am organizing the setup notes and screenshots into a separate GitHub project. I want the repository to show the build as it happens, including the troubleshooting, rather than wait until every exercise is finished.
 
 The next small task is changing the initial dashboard password and verifying that I can log back in. After the server checks, I will start building the Windows endpoint. That is where I will begin practicing the detection and investigation side of the lab.
+
+## October 5, 2026 — First Windows endpoint
+
+I created the Windows 11 Enterprise Evaluation VM with 4 vCPUs, 8 GiB of RAM, an 80 GiB SATA disk, UEFI firmware, and an emulated TPM 2.0 device. The installer reached the desktop successfully. I created the local `labadmin` account and kept the privacy choices limited to required diagnostics.
+
+The endpoint received `192.168.122.37` from the same default NAT network as the Wazuh server. From an Administrator PowerShell window, I tested TCP ports 1514 and 1515 on `192.168.122.243`; both returned `TcpTestSucceeded: True`. This is the first evidence that the endpoint can reach the manager before the agent is installed.
+
+This was a good stopping point for the day. The next step is installing and enrolling the Wazuh agent, then adding Sysmon so I can investigate endpoint events instead of only validating infrastructure.
+
+Evidence: [Windows installer boot](../screenshots/13-windows11-installer-boot.png), [installation disk](../screenshots/14-windows11-installation-disk.png), [first desktop](../screenshots/15-windows11-first-desktop.png), and [Wazuh port checks](../screenshots/16-windows-first-wazuh-port-check.png).

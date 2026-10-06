@@ -76,3 +76,16 @@ With the VM off, I renamed the overlay to the path expected by the VM, then star
 - Follow the Wazuh quickstart's package-repository guidance for deliberate component upgrades.
 - Configure SSH keys and a stable guest address before endpoint enrollment.
 - Validate snapshot recovery before relying on it.
+
+## Windows endpoint
+
+Created `windows11-endpoint` with 4 vCPUs, 8192 MiB RAM, an 80 GiB SATA disk, UEFI firmware, an emulated TPM 2.0 device, and the default NAT network. Windows assigned the local account `labadmin` and observed address `192.168.122.37`.
+
+From an elevated PowerShell prompt in the endpoint, verified manager reachability:
+
+```powershell
+Test-NetConnection 192.168.122.243 -Port 1514
+Test-NetConnection 192.168.122.243 -Port 1515
+```
+
+Both tests returned `TcpTestSucceeded: True`. The Wazuh agent and Sysmon have not been installed yet.

@@ -21,5 +21,9 @@ These captures document the server setup milestone. Filenames have been organize
 | [09a — SSH connection](09a-ssh-connection.png) | Successful SSH login from the desktop before package updates. No password value is visible. |
 | [10 — Dashboard overview](10-wazuh-dashboard-first-login.png) | Successful dashboard login with no registered endpoint agents yet. |
 | [10a — Health check in progress](10a-dashboard-health-check-in-progress.png) | API checks passed; the alerts index-pattern check was still loading at capture time. The overview is shown in 10. |
+| [13 — Windows installer boot](13-windows11-installer-boot.png) | Windows 11 Setup keyboard screen after the endpoint VM booted from the official evaluation ISO. |
+| [14 — Windows installation disk](14-windows11-installation-disk.png) | Windows Setup detected the empty 80 GiB virtual disk. |
+| [15 — Windows first desktop](15-windows11-first-desktop.png) | Windows 11 Enterprise Evaluation reached the desktop after installation. |
+| [16 — Windows Wazuh port check](16-windows-first-wazuh-port-check.png) | PowerShell TCP tests from `192.168.122.37` to Wazuh `192.168.122.243`; ports 1514 and 1515 both succeeded. This does not prove an agent is enrolled. |
 
 Duplicate and mislabeled intermediate captures were left in the original local folder. The repository uses the actual completed-installation screen and browser dashboard capture. The snapshot filename repair and synchronized-clock check are described in the journal from the terminal outputs; no additional screenshots are claimed for them.
