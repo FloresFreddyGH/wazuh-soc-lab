@@ -69,12 +69,12 @@ I also inspected the actual file with `qemu-img info --backing-chain`. It was a 
 
 With the VM off, I renamed the overlay to the path expected by the VM, then started the domain and successfully connected over SSH. That verified boot and login after the repair. Snapshot reversion has **not** been tested, and the snapshot metadata still needs review after the rename. These notes intentionally do not provide a generic rename command: future repairs need the actual paths and disk chain checked first.
 
-## Pending verification
+## Verification and remaining administration tasks
 
-- Rotate the initial admin credential and test a fresh login.
-- Check all Wazuh services after reboot.
-- Follow the Wazuh quickstart's package-repository guidance for deliberate component upgrades.
-- Configure SSH keys and a stable guest address before endpoint enrollment.
+- Completed: rotated the initial admin credential and verified dashboard access.
+- Completed: checked manager, indexer, Filebeat, and dashboard service health.
+- Wazuh apt repository disabled to avoid unplanned component upgrades; deliberate upgrade procedure still to document.
+- Configure SSH keys and a stable guest address. Enrollment currently uses the observed DHCP address.
 - Validate snapshot recovery before relying on it.
 
 ## Windows endpoint
@@ -88,4 +88,21 @@ Test-NetConnection 192.168.122.243 -Port 1514
 Test-NetConnection 192.168.122.243 -Port 1515
 ```
 
-Both tests returned `TcpTestSucceeded: True`. The Wazuh agent and Sysmon have not been installed yet.
+Both tests returned `TcpTestSucceeded: True`. Agent enrollment was completed on October 9; Sysmon is still pending.
+
+## Windows agent enrollment — October 9
+
+Used the dashboard deployment settings for Windows MSI, manager `192.168.122.243`, and agent name `WIN11-ENDPOINT`. Ran the following in Administrator PowerShell:
+
+```powershell
+Invoke-WebRequest -Uri "https://packages.wazuh.com/4.x/windows/wazuh-agent-4.14.8-1.msi" -OutFile "$env:TEMP\wazuh-agent.msi"
+Start-Process msiexec.exe -ArgumentList "/i `"$env:TEMP\wazuh-agent.msi`" /qn WAZUH_MANAGER=192.168.122.243 WAZUH_AGENT_NAME=WIN11-ENDPOINT" -Wait
+Start-Service WazuhSvc
+Get-Service WazuhSvc
+```
+
+The service showed Running, and the dashboard independently confirmed agent `001` as Active with version 4.14.8. The service check alone would not establish that enrollment succeeded.
+
+The initial endpoint view showed 4 cores and 7.9 GB memory, plus configuration and vulnerability findings. In Threat Hunting, filtered for `rule.id: "61104"` and inspected the underlying Windows event fields. See the [investigation](first-alert-investigation.md).
+
+The server health screenshot shows all four services active and a successful `filebeat test output`. Its reported `7.10.2` is the compatibility response from the indexer, not the installed Wazuh version. The post-reboot dashboard screenshot was captured while an index-pattern check was still loading; it does not independently prove every check completed.

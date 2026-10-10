@@ -1,17 +1,17 @@
-# Website portfolio copy
+# Portfolio summary
 
 ## Wazuh SOC Home Lab
 
-**Status: In progress — server setup complete, endpoint investigations planned.**
+**Status: In progress — Windows agent connected and first alerts investigated.**
 
-I am building a local security monitoring lab on my Ubuntu desktop using KVM/QEMU and Wazuh. So far, I have configured an Ubuntu Server VM, enabled SSH administration, installed Wazuh 4.14.8, and accessed its dashboard. Along the way, I diagnosed a snapshot filename mismatch that prevented the VM from starting and restored boot access without reinstalling the system.
+I am building a local security monitoring lab on my Ubuntu desktop using KVM/QEMU and Wazuh. My Ubuntu server and Windows 11 endpoint are running, and the Windows agent is active in the dashboard. I have reviewed the first security baseline and investigated two service-startup changes by reading the underlying Windows event fields.
 
-Next, I will connect a Windows endpoint with the Wazuh agent and Sysmon, then investigate controlled login, PowerShell, and scheduled-task activity. Those detection exercises are not complete yet.
+My first guess was that an alert came from configuring Wazuh to start automatically. The records showed BITS and UCPD instead. That was useful practice in checking an assumption against evidence. I also worked through a broken snapshot filename and a VirtIO driver issue that interrupted copy and paste in the Windows VM.
 
-**Skills practiced so far:** Linux administration, virtualization, NAT networking, SSH, troubleshooting, SIEM deployment, and technical documentation.
+Next are Sysmon and controlled login, PowerShell, and scheduled-task exercises. The full lab is not finished yet.
 
-**Repository:** https://github.com/FloresFreddyGH/wazuh-soc-lab
+**Skills practiced:** Linux administration, virtualization, networking, SSH, troubleshooting, Wazuh deployment, endpoint enrollment, event analysis, and documentation.
 
-**Suggested image:** `screenshots/10-wazuh-dashboard-first-login.png`
+**Repository:** [Wazuh SOC Home Lab](https://github.com/FloresFreddyGH/wazuh-soc-lab)
 
-**Image caption:** First Wazuh dashboard login after deployment; no endpoint agents registered yet.
+**Suggested image:** [Active Windows endpoint](../screenshots/19-windows-wazuh-agent-active.png)
