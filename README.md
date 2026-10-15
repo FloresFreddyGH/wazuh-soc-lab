@@ -1,75 +1,73 @@
 # Wazuh SOC Home Lab
 
-**In progress — Windows agent connected and first alerts investigated; Sysmon and controlled detection exercises are next.**
+**Completed learning project — Windows monitoring, custom detection, failed-logon investigation, and file integrity monitoring.**
 
-After finishing my [Azure security lab](https://github.com/FloresFreddyGH/azure-security-lab), I wanted to build something I could keep experimenting with on my own computer. This is my next project: a local Wazuh lab where I plan to collect Windows events, investigate controlled activity, and write up what I actually find.
+After my [Azure security lab](https://github.com/FloresFreddyGH/azure-security-lab), I wanted to build a monitoring environment on my own computer. I used KVM/QEMU to run an Ubuntu Wazuh server and a Windows 11 endpoint, then followed controlled activity from Windows into the dashboard.
 
-My Windows endpoint is now active in Wazuh, and I have started opening real event records to understand what triggered the alerts. My first investigation was a useful reminder to check my assumptions: I thought a startup-setting change might be the Wazuh service, but the records identified BITS and UCPD.
+The most useful part was figuring out why something appeared—or did not appear—as an alert. I checked parent processes, investigated a missing whoami alert, built a custom rule, and fixed a three-hour clock discrepancy. I finished by verifying failed-logon alerts and the creation, modification, and deletion of a test file.
 
-Getting here also meant troubleshooting Linux permissions, a broken snapshot filename, and copy and paste inside the Windows VM. I am keeping those parts in the journal too. They are part of what I am learning.
+![File deletion alert completing the FIM exercise](screenshots/44-wazuh-fim-file-deleted.png)
 
-![Windows endpoint active in Wazuh](screenshots/19-windows-wazuh-agent-active.png)
+## Results
 
-## What works so far
+| Exercise | Verified result | Write-up |
+| --- | --- | --- |
+| Service-change investigation | Identified BITS and UCPD rather than the Wazuh service I initially suspected; cause remains unconfirmed | [Service changes](docs/first-alert-investigation.md) |
+| Sysmon and custom detection | Local process event, collection in Wazuh, and live rule 100100 alert for whoami.exe | [Process investigation](docs/sysmon-investigation.md) |
+| Clock troubleshooting | Windows synchronized to NTP; fresh event and alert timestamps agreed after timezone conversion | [Time verification](docs/sysmon-investigation.md#clock-correction-and-retest) |
+| Failed logons | Three controlled failures; Windows 4625 and Wazuh rule 60122, level 5 | [Authentication investigation](docs/failed-logon-investigation.md) |
+| File integrity monitoring | Real-time added, modified, and deleted alerts: rules 554, 550, and 553 | [FIM investigation](docs/file-integrity-investigation.md) |
 
-- KVM/QEMU and Virtual Machine Manager on my Ubuntu desktop.
-- Ubuntu Server 24.04.5 LTS VM with 4 vCPUs, 8 GiB RAM, and an 80 GiB virtual disk.
-- Default NAT networking and SSH access from the desktop.
-- Package updates and a synchronized UTC clock checked before installing Wazuh.
-- Wazuh manager, indexer, Filebeat, and dashboard started by the installation assistant.
-- Successful browser login to the dashboard; admin password rotated and service health checked.
-- Windows agent 4.14.8 enrolled as `WIN11-ENDPOINT`, ID `001`, with status **Active**.
-- First inventory, configuration assessment, and vulnerability findings reviewed.
-- Two Windows service-startup changes examined using their event details.
-- Windows 11 Enterprise Evaluation endpoint installed with 4 vCPUs, 8 GiB RAM, an 80 GiB disk, UEFI, TPM 2.0, and default NAT networking.
-- Windows endpoint received `192.168.122.37`; TCP connectivity to Wazuh ports 1514 and 1515 succeeded.
-- A snapshot-related boot problem diagnosed and repaired without reinstalling Ubuntu.
+These were harmless, intentional tests. An alert or MITRE mapping by itself does not establish an attack.
 
-The first endpoint assessment showed a 26% configuration benchmark score and 19 vulnerability findings associated with QEMU guest agent. These are findings to investigate, not proof of a compromise. My [first alert investigation](docs/first-alert-investigation.md) records what the BITS and UCPD events establish and what remains unknown.
+## Architecture
 
-## Lab setup
+```mermaid
+flowchart LR
+    W[Windows 11: Sysmon and Security logs] --> A[Wazuh agent]
+    F[Lab folder: file changes] --> A
+    A --> M[Wazuh manager: decoding and rules]
+    M --> B[Filebeat]
+    B --> I[Wazuh indexer]
+    I --> D[Wazuh dashboard]
+    D --> U[Browser investigation]
+```
 
-| Component | Configuration |
+The manager, indexer, Filebeat, and dashboard run together on the Ubuntu VM. The browser is the interface; the server receives and analyzes the events.
+
+| Component | Lab configuration |
 | --- | --- |
 | Host | Ubuntu desktop, Intel Core i5-14400F, approximately 32 GB RAM |
-| Hypervisor | KVM/QEMU with Virtual Machine Manager |
-| Server | `wazuh-server`, Ubuntu Server 24.04.5 LTS |
-| VM resources | 4 vCPUs, 8192 MiB RAM, 80 GiB virtual disk |
-| Storage | ext4 root filesystem; no LVM in this installation |
-| Network | libvirt default NAT; observed guest IP `192.168.122.243` via DHCP |
-| Platform | Wazuh 4.14.8, all central components on one VM |
-| Administration | SSH from the host; dashboard over HTTPS |
-| Endpoint | Windows 11 Enterprise Evaluation VM, `labadmin`, observed IP `192.168.122.37`; Wazuh agent 4.14.8 active as `WIN11-ENDPOINT`; Sysmon still pending |
+| Virtualization | KVM/QEMU with Virtual Machine Manager |
+| Server | Ubuntu Server 24.04.5 LTS; 4 vCPUs, 8 GiB RAM, 80 GiB disk |
+| Platform | Wazuh 4.14.8 |
+| Endpoint | Windows 11 Enterprise Evaluation; 4 vCPUs, 8 GiB RAM, 80 GiB disk; Sysmon 15.22 |
+| Agent | WIN11-ENDPOINT, ID 001, Wazuh 4.14.8 |
+| Network | libvirt default NAT; server 192.168.122.243 and endpoint 192.168.122.37 observed via DHCP |
 
-The address above belongs to my local lab and may change. The host and VM must be running for me to access the dashboard or connect over SSH.
+## Documentation and reusable configuration
 
-## Next steps
+- [Lab journal](docs/lab-journal.md): progress, mistakes, and lessons in my own words
+- [Setup notes](docs/setup-notes.md): installation and configuration steps
+- [Screenshot index](screenshots/README.md): numbered evidence through 44, including limitations
+- [Custom rule](configs/whoami-rule.xml): lab snippet, not a replacement rules file
+- [Windows collection and FIM snippets](configs/windows-agent-snippets.xml)
+- [Portfolio summary](docs/portfolio-summary.md): short project description
 
-- [x] Rotate the initial dashboard admin password and verify a new login.
-- [x] Verify service health after reboot and document the result.
-- [ ] Set up deliberate Wazuh package updates and SSH key authentication.
-- [ ] Review snapshot metadata after the filename repair and test a recovery procedure before relying on it.
-- [x] Create the Windows VM and verify connectivity to Wazuh ports 1514 and 1515.
-- [x] Enroll its Wazuh agent and confirm Active status.
-- [x] Review the first endpoint baseline and investigate two service-change records.
-- [ ] Install Sysmon and verify that Windows events reach Wazuh.
-- [ ] Investigate controlled failed logins, a harmless PowerShell script, and a harmless scheduled task.
-- [ ] Write incident timelines, compare expected and unexpected activity, and verify cleanup.
+## Completion and limits
 
-## Notes and evidence
+The defined build and three controlled detection exercises are complete. The test file was deleted, no failed-login test account was created, and the empty lab folder remains monitored. The custom rule and VMs remain available for practice.
 
-- [First alert investigation](docs/first-alert-investigation.md): BITS and UCPD startup-setting changes.
-- [Lab journal](docs/lab-journal.md): what I did, what went wrong, and what I learned.
-- [Setup notes](docs/setup-notes.md): commands and configuration recorded during the build.
-- [Screenshot index](screenshots/README.md): evidence with captions and limits.
-- [Portfolio summary](docs/portfolio-summary.md): a short description of the current milestone.
+This is a small learning environment, not a production SOC deployment. The tests do not establish complete telemetry coverage. I did not complete a scheduled-task exercise, automated response, or a comprehensive hardening project. Sysmon was installed with its default configuration; not all supported event types are necessarily enabled.
 
-This repository contains documentation and screenshots. VM disks, installation ISOs, private keys, passwords, and installation credential archives stay out of Git.
+The first baseline's 26% configuration score and 19 QEMU guest-agent vulnerability findings were recorded, not remediated or independently validated here. Snapshot boot repair succeeded, but restore testing remains unverified. SSH keys, stable addressing, deliberate upgrade procedures, and broader detection tuning are future improvements rather than completed claims.
 
 ## References and assistance
 
 - [Wazuh quickstart](https://documentation.wazuh.com/current/quickstart.html)
-- [Ubuntu virtualization documentation](https://documentation.ubuntu.com/server/how-to/virtualisation/)
-- [Libvirt domain XML documentation](https://libvirt.org/formatdomain.html)
+- [Wazuh custom rules](https://documentation.wazuh.com/current/user-manual/ruleset/rules/custom.html)
+- [Wazuh FIM proof of concept](https://documentation.wazuh.com/current/proof-of-concept-guide/poc-file-integrity-monitoring.html)
+- [Microsoft Sysmon](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon)
+- [Microsoft event 4625](https://learn.microsoft.com/windows/security/threat-protection/auditing/event-4625)
 
-I use official documentation and AI assistance for explanations, troubleshooting, and organizing my notes. I perform the lab steps and keep the claims tied to the outputs and screenshots I have collected.
+I used official documentation and ChatGPT/Codex for explanations, troubleshooting, and organizing the repository. I performed the VM configuration, ran the tests, and checked the evidence. Passwords, raw credential output, VM disks, and installers are excluded from Git.

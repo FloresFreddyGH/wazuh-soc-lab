@@ -1,17 +1,17 @@
-# Portfolio summary
+# Wazuh SOC Home Lab
 
-## Wazuh SOC Home Lab
+**Status: Completed learning project**
 
-**Status: In progress — Windows agent connected and first alerts investigated.**
+I built a local security monitoring lab with an Ubuntu Wazuh server and a Windows 11 endpoint using KVM/QEMU. I connected Sysmon and Windows Security logs, created a custom whoami detection rule, and verified alerts for failed logons and file creation, modification, and deletion.
 
-I am building a local security monitoring lab on my Ubuntu desktop using KVM/QEMU and Wazuh. My Ubuntu server and Windows 11 endpoint are running, and the Windows agent is active in the dashboard. I have reviewed the first security baseline and investigated two service-startup changes by reading the underlying Windows event fields.
+One of the biggest lessons was learning to check what an alert actually proves. I traced a PowerShell event back to the Wazuh agent, investigated why a locally recorded process did not appear in my alert search, and fixed a clock discrepancy before comparing timestamps again. I documented both the successful tests and the troubleshooting along the way.
 
-My first guess was that an alert came from configuring Wazuh to start automatically. The records showed BITS and UCPD instead. That was useful practice in checking an assumption against evidence. I also worked through a broken snapshot filename and a VirtIO driver issue that interrupted copy and paste in the Windows VM.
+**Skills practiced:** virtualization, Linux and Windows administration, log analysis, Sysmon, Wazuh rules, authentication investigation, file integrity monitoring, NTP troubleshooting, and evidence-based documentation.
 
-Next are Sysmon and controlled login, PowerShell, and scheduled-task exercises. The full lab is not finished yet.
-
-**Skills practiced:** Linux administration, virtualization, networking, SSH, troubleshooting, Wazuh deployment, endpoint enrollment, event analysis, and documentation.
+**Scope:** harmless controlled tests in my own VMs; no claim of production deployment or real attack response.
 
 **Repository:** [Wazuh SOC Home Lab](https://github.com/FloresFreddyGH/wazuh-soc-lab)
 
-**Suggested image:** [Active Windows endpoint](../screenshots/19-windows-wazuh-agent-active.png)
+**Suggested image:** [File integrity monitoring results](../screenshots/44-wazuh-fim-file-deleted.png)
+
+**Interview talking point:** “I followed activity from Windows into Wazuh, built and verified a custom process-detection rule, and investigated failed logons and file changes. When timestamps did not agree, I checked UTC and synchronization status, fixed the endpoint clock, and verified a fresh event.”

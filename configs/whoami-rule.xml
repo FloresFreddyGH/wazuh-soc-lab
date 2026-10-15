@@ -1,0 +1,10 @@
+<!-- Append this group to the manager's local_rules.xml; preserve existing rules.
+     Confirm ID 100100 is unused before reusing in another environment.
+     Recorded lab configuration, not an export of the complete live rules file. -->
+<group name="local,windows,sysmon,">
+  <rule id="100100" level="3">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\whoami\.exe$</field>
+    <description>Lab: whoami process execution detected</description>
+  </rule>
+</group>

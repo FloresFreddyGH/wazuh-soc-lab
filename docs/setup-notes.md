@@ -88,7 +88,7 @@ Test-NetConnection 192.168.122.243 -Port 1514
 Test-NetConnection 192.168.122.243 -Port 1515
 ```
 
-Both tests returned `TcpTestSucceeded: True`. Agent enrollment was completed on October 9; Sysmon is still pending.
+Both tests returned `TcpTestSucceeded: True`. Agent enrollment was completed on October 9; Sysmon collection and controlled tests were subsequently verified as described below.
 
 ## Windows agent enrollment — October 9
 
@@ -106,3 +106,75 @@ The service showed Running, and the dashboard independently confirmed agent `001
 The initial endpoint view showed 4 cores and 7.9 GB memory, plus configuration and vulnerability findings. In Threat Hunting, filtered for `rule.id: "61104"` and inspected the underlying Windows event fields. See the [investigation](first-alert-investigation.md).
 
 The server health screenshot shows all four services active and a successful `filebeat test output`. Its reported `7.10.2` is the compatibility response from the indexer, not the installed Wazuh version. The post-reboot dashboard screenshot was captured while an index-pattern check was still loading; it does not independently prove every check completed.
+
+## Sysmon and agent configuration
+
+Installed Sysmon in Windows Administrator PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Path C:\Sysmon -Force
+Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile "C:\Sysmon\Sysmon.zip"
+Expand-Archive -Path "C:\Sysmon\Sysmon.zip" -DestinationPath "C:\Sysmon" -Force
+C:\Sysmon\Sysmon64.exe -accepteula -i
+Get-Service Sysmon64
+```
+
+This installed the default Sysmon configuration, not a comprehensive detection configuration. Added the localfile fragment in [Windows agent snippets](../configs/windows-agent-snippets.xml) to the existing ossec_config, then restarted WazuhSvc and checked local events and received dashboard alerts.
+
+## Custom process rule on the Ubuntu manager
+
+Backed up the rules before editing:
+
+```bash
+sudo cp -a /var/ossec/etc/rules/local_rules.xml /var/ossec/etc/rules/local_rules.xml.before-whoami
+sudo nano /var/ossec/etc/rules/local_rules.xml
+```
+
+Appended the group in [whoami-rule.xml](../configs/whoami-rule.xml), preserving the existing rule. This is the recorded lab snippet, not a retrieved export of the whole live file. Verify ID availability in another environment.
+
+```bash
+sudo /var/ossec/bin/wazuh-analysisd -t
+sudo systemctl restart wazuh-manager
+sudo systemctl is-active wazuh-manager
+```
+
+Only restart after a successful configuration check. The actual detection was verified with a new whoami.exe execution in Windows and a live dashboard alert. The generic JSON logtest attempt did not validate it; see the [investigation](sysmon-investigation.md).
+
+## Windows clock synchronization
+
+Compared UTC on both VMs. Ubuntu reported synchronized NTP; Windows initially reported Local CMOS Clock. In elevated Windows PowerShell:
+
+```powershell
+Set-Service W32Time -StartupType Automatic
+Start-Service W32Time
+w32tm /config /manualpeerlist:"time.windows.com,0x8" /syncfromflags:manual /update
+Restart-Service W32Time
+w32tm /resync /rediscover
+w32tm /stripchart /computer:time.windows.com /dataonly /samples:5
+w32tm /query /status
+(Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
+```
+
+The first resync failed; subsequent status showed success. A fresh event verified timestamp agreement. The timezone remained Pacific on Windows; the dashboard used Eastern display time.
+
+## File integrity monitoring
+
+Created the local folder before enabling real-time monitoring, with a timestamped configuration backup:
+
+```powershell
+New-Item -ItemType Directory -Path "C:\WazuhLab" -Force
+Copy-Item "C:\Program Files (x86)\ossec-agent\ossec.conf" "C:\Program Files (x86)\ossec-agent\ossec.conf.before-fim-$(Get-Date -Format yyyyMMdd-HHmmss)"
+notepad "C:\Program Files (x86)\ossec-agent\ossec.conf"
+```
+
+Merged the directories entry from [Windows agent snippets](../configs/windows-agent-snippets.xml) into the existing syscheck block without removing other settings. Checked the saved line, restarted WazuhSvc, and inspected ossec.log. The initial FIM scan completed and real-time monitoring started before the first test.
+
+The [FIM write-up](file-integrity-investigation.md) records the commands, alerts, and cleanup. No full agent configuration or authentication key is published.
+
+## Final retained state
+
+- Windows agent, Sysmon collection, custom rule 100100, and lab-folder monitoring remain configured.
+- Failed-login tests used a nonexistent account; no account cleanup was required.
+- The FIM test file was deleted and its deletion detected.
+- Local backups and the empty monitored folder remain.
+- Snapshot recovery, SSH keys, upgrade procedures, and stable addressing remain future administration tasks. They are not claimed as completed by this project's detection tests.

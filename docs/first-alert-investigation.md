@@ -27,7 +27,9 @@ BITS supports background file transfers. Learning what a component does gives me
 
 I would check related Windows update, installation, and administrative activity to establish the cause. I also noticed a timestamp discrepancy: the dashboard lists October 9 around 20:27–20:31, while the raw Windows `systemTime` fields show October 10 around 03:26–03:31 UTC. I need to verify guest/server clocks and dashboard timezone before constructing a precise incident timeline.
 
-This was an investigation of existing activity, not a controlled attack simulation. Sysmon and deliberate detection exercises are still ahead.
+This was an investigation of existing activity, not a controlled attack simulation.
+
+**October 11 follow-up:** Windows was found unsynchronized and roughly three hours ahead in UTC. After correction, a fresh test event matched the dashboard after timezone conversion; see the [clock investigation](sysmon-investigation.md#clock-correction-and-retest). This does not establish the cause of the earlier BITS/UCPD changes or retroactively correct their timestamps.
 
 ## References
 

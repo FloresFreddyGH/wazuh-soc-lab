@@ -1,0 +1,12 @@
+<!-- Merge these fragments into the existing ossec_config.
+     Put localfile under ossec_config and directories inside existing syscheck.
+     Do not replace the full configuration. Create C:\WazuhLab before restart. -->
+<ossec_config>
+  <localfile>
+    <location>Microsoft-Windows-Sysmon/Operational</location>
+    <log_format>eventchannel</log_format>
+  </localfile>
+  <syscheck>
+    <directories check_all="yes" realtime="yes">C:\WazuhLab</directories>
+  </syscheck>
+</ossec_config>
